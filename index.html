@@ -83,6 +83,23 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .result .card h3{font-size:22px;margin-bottom:6px;}
 .result .card p{color:var(--muted);margin-bottom:16px;}
 .result .card button{background:var(--green);border:none;color:#fff;padding:10px 22px;border-radius:6px;cursor:pointer;font-size:15px;font-weight:600;}
+
+.rules-overlay{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;backdrop-filter:blur(2px);}
+.rules-overlay.open{display:flex;}
+.rules-card{background:var(--panel);color:var(--text);max-width:520px;width:100%;max-height:88vh;overflow-y:auto;border-radius:12px;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,.6);position:relative;}
+.rules-card h2{font-size:22px;margin-bottom:6px;}
+.rules-lede{color:var(--muted);margin-bottom:16px;font-size:15px;line-height:1.5;}
+.rules-sec{margin:14px 0;padding:12px 14px;background:var(--panel2);border-radius:8px;border-left:3px solid var(--green);}
+.rules-sec.win{border-left-color:#e23b3b;}
+.rules-sec h3{font-size:15px;margin-bottom:6px;}
+.rules-sec p{font-size:14px;line-height:1.55;color:#d6d4d1;}
+.rules-sec ul,.rules-sec ol{margin:8px 0 0 20px;font-size:14px;line-height:1.6;color:#d6d4d1;}
+.rules-sec li{margin:3px 0;}
+.rules-sec b{color:var(--text);}
+.rules-x{position:absolute;top:14px;right:14px;background:#3d3b38;border:none;color:var(--text);width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:15px;}
+.rules-x:hover{background:#4a4844;}
+.rules-play{margin-top:18px;width:100%;background:var(--green);border:none;color:#fff;padding:12px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;}
+.rules-play:hover{background:var(--greenh);}
 </style>
 </head>
 <body>
@@ -115,6 +132,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <option value="b">Play Black</option>
       </select>
       <button onclick="resign()">Resign</button>
+      <button onclick="openRules()">📖 Rules</button>
     </div>
     <h2>♥ 3-Hearts Chess</h2>
     <div class="moves" id="moveList"></div>
@@ -125,6 +143,46 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <button onclick="navNext()" title="Forward">▶</button>
       <button onclick="navLast()" title="Last">⏭</button>
     </div>
+  </div>
+</div>
+<div class="rules-overlay" id="rulesOverlay" onclick="if(event.target===this)closeRules()">
+  <div class="rules-card">
+    <button class="rules-x" onclick="closeRules()">✕</button>
+    <h2>♥ How to Play — 3-Hearts Chess</h2>
+    <p class="rules-lede">Standard chess, but every piece has <b>hearts</b> and can survive being attacked — until it can't.</p>
+    <div class="rules-sec">
+      <h3>♥ Hearts</h3>
+      <p>Every piece starts with <b>3 hearts</b> (shown above it). Hearts let a piece take a few hits before dying.</p>
+    </div>
+    <div class="rules-sec">
+      <h3>💥 The damage phase</h3>
+      <p>At the end of every move, damage is applied <b>only to your opponent's pieces</b> — the side that just moved never takes damage on its own turn.</p>
+      <ul>
+        <li>A piece loses <b>one heart for every enemy piece attacking it</b>. Attacked by two pieces → lose two hearts.</li>
+        <li>A piece at <b>0 hearts is removed</b> from the board.</li>
+        <li>Blocking/defending doesn't stop heart loss — if it's attacked, it loses hearts.</li>
+      </ul>
+    </div>
+    <div class="rules-sec">
+      <h3>♟ Capturing</h3>
+      <p>You can still <b>capture normally</b> — move onto an enemy square to take the piece outright, no matter how many hearts it had.</p>
+    </div>
+    <div class="rules-sec">
+      <h3>♚ The king</h3>
+      <p>The king also has <b>3 hearts</b>. You still <b>can't move into check</b>, and <b>checkmate still ends the game</b>. Because you never leave your own king in check, it only takes damage from the opponent's check — so it loses exactly <b>one heart per check</b>.</p>
+    </div>
+    <div class="rules-sec win">
+      <h3>🏆 How to win — two ways</h3>
+      <ol>
+        <li><b>Checkmate</b> the enemy king, or</li>
+        <li><b>Check the enemy king three times</b> — each check drains a heart; at 0 hearts, that player loses.</li>
+      </ol>
+    </div>
+    <div class="rules-sec">
+      <h3>🎮 Controls</h3>
+      <p>Drag or click to move · right-click-drag to draw <b>arrows</b> · right-click a square to <b>highlight</b> · queue a <b>premove</b> on the bot's turn · click a move in the list to review · <b>Flip</b> the board · arrow keys to navigate.</p>
+    </div>
+    <button class="rules-play" onclick="closeRules()">Got it — let's play ♥</button>
   </div>
 </div>
 <script>
@@ -690,7 +748,7 @@ function updateStatus(msg){
 /*======================= NAV =======================*/
 function gotoPly(i){viewIndex=Math.max(0,Math.min(history.length,i));clearSel();render();}
 function navFirst(){gotoPly(0);}function navPrev(){gotoPly(viewIndex-1);}function navNext(){gotoPly(viewIndex+1);}function navLast(){gotoPly(history.length);}
-document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')navPrev();else if(e.key==='ArrowRight')navNext();else if(e.key==='ArrowUp')navFirst();else if(e.key==='ArrowDown')navLast();else if(e.key==='f')flipBoard();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeRules();return;}if(document.getElementById('rulesOverlay').classList.contains('open'))return;if(e.key==='ArrowLeft')navPrev();else if(e.key==='ArrowRight')navNext();else if(e.key==='ArrowUp')navFirst();else if(e.key==='ArrowDown')navLast();else if(e.key==='f')flipBoard();});
 
 /*======================= CONTROLS =======================*/
 function flipBoard(){flipped=!flipped;drawBoard();render();}
@@ -711,6 +769,12 @@ initialSnapshot=state;
 drawBoard();render();updateStatus();
 window.newGame=newGame;window.flipBoard=flipBoard;window.resign=resign;
 window.navFirst=navFirst;window.navPrev=navPrev;window.navNext=navNext;window.navLast=navLast;
+
+function openRules(){document.getElementById('rulesOverlay').classList.add('open');}
+function closeRules(){document.getElementById('rulesOverlay').classList.remove('open');try{localStorage.setItem('heartsRulesSeen','1');}catch(e){}}
+window.openRules=openRules;window.closeRules=closeRules;
+try{if(!localStorage.getItem('heartsRulesSeen'))openRules();}catch(e){openRules();}
+
 </script>
 </body>
 </html>
