@@ -724,6 +724,18 @@ function isInsufficient(st){
   return false;
 }
 function kingHearts(st,color){const k=findKing(st.board,color);return k?st.hearts[k[0]][k[1]]:0;}
+function positionKey(state){
+  const b=state.board.map(r=>r.map(x=>x||'..').join('')).join('/');
+  const cs=(state.castling.wK?'K':'')+(state.castling.wQ?'Q':'')+(state.castling.bK?'k':'')+(state.castling.bQ?'q':'')||'-';
+  const ep=state.ep?(state.ep[0]+','+state.ep[1]):'-';
+  return b+'|'+state.turn+'|'+cs+'|'+ep+'|H'+state.hearts.map(r=>r.map(x=>x==null?'.':x).join('')).join('/');
+}
+function repetitionCount(){
+  const key=positionKey(state);let n=0;
+  if(positionKey(initialSnapshot)===key)n++;
+  for(const h of history){if(positionKey(h.after)===key)n++;}
+  return n;
+}
 function checkEnd(){
   // loss by 3 checks: a king drained to 0 hearts
   for(const color of[WHITE,BLACK]){
@@ -736,6 +748,7 @@ function checkEnd(){
     else showResult('Draw','Stalemate');
     return;
   }
+  if(repetitionCount()>=3){gameOver=true;beep('end');showResult('Draw','Threefold repetition');return;}
   if(state.half>=100){gameOver=true;beep('end');showResult('Draw','50-move rule');return;}
 }
 function showResult(title,sub){document.getElementById('resTitle').textContent=title;document.getElementById('resSub').textContent=sub;setTimeout(()=>{document.getElementById('resultBox').style.display='flex';},1100);}
