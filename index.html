@@ -636,7 +636,7 @@ function showPromo(from,to,moves){
 }
 
 /*======================= POINTER (drag + click + right arrows) =======================*/
-let downSquare=null,downButton=0,rightStart=null,didDrag=false;
+let downSquare=null,downButton=0,rightStart=null,didDrag=false,wasSelected=false;
 wrap.addEventListener('contextmenu',e=>e.preventDefault());
 wrap.addEventListener('pointerdown',e=>{
   const sqr=eventSquare(e);if(!sqr)return;
@@ -648,6 +648,7 @@ wrap.addEventListener('pointerdown',e=>{
   const live=viewIndex===history.length;
   if(!live){renderOverlay();return;}
   downSquare=sqr;didDrag=false;
+  wasSelected=!!(selected&&selected[0]===sqr[0]&&selected[1]===sqr[1]);
   const st=state;const p=st.board[sqr[0]][sqr[1]];
   // begin drag if own movable piece OR (premove) own piece when not turn
   const canDrag=p&&p[0]===humanColor&&!gameOver;
@@ -682,10 +683,12 @@ wrap.addEventListener('pointerup',e=>{
   const up=eventSquare(e);
   if(dragEl){
     const from=dragInfo.from;dragEl.classList.remove('dragging');
-    if(up&&didDrag&&!(up[0]===from[0]&&up[1]===from[1])){
+    const sameSq=up&&up[0]===from[0]&&up[1]===from[1];
+    if(up&&didDrag&&!sameSq){
       handleDestination(from,up);
-    }else if(!didDrag){
-      // treated as click-select (already selected). keep selection.
+    }else if(!up||sameSq){
+      // click / release on same square: toggle off if it was already selected before this press
+      if(wasSelected){clearSel();}
     }
     // snap back visually (render will fix)
     dragEl=null;dragInfo=null;render();renderOverlay();
