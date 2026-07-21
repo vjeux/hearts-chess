@@ -100,6 +100,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .rules-x:hover{background:#4a4844;}
 .rules-play{margin-top:18px;width:100%;background:var(--green);border:none;color:#fff;padding:12px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;}
 .rules-play:hover{background:var(--greenh);}
+.result .card{position:relative;}.result-x{position:absolute;top:10px;right:10px;background:#3d3b38;border:none;color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;}.result-x:hover{background:#4a4844;}.show-result-btn{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:80;background:var(--green);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.4);}.show-result-btn:hover{background:var(--greenh);}
 </style>
 </head>
 <body>
@@ -115,7 +116,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <div id="overlay"></div>
       <div id="pieces"></div>
       <div id="promo"></div>
-      <div class="result" id="resultBox"><div class="card"><h3 id="resTitle"></h3><p id="resSub"></p><button onclick="newGame()">New Game</button></div></div>
+      <div class="result" id="resultBox" onclick="if(event.target===this)dismissResult()"><div class="card"><button class="result-x" onclick="dismissResult()" title="Dismiss">✕</button><h3 id="resTitle"></h3><p id="resSub"></p><button onclick="newGame()">New Game</button></div></div><button id="showResultBtn" class="show-result-btn" onclick="reopenResult()" style="display:none">Show result</button>
     </div>
     <div class="player-row" id="botPlayer">
       <div class="avatar">😀</div>
@@ -751,7 +752,11 @@ function checkEnd(){
   if(repetitionCount()>=3){gameOver=true;beep('end');showResult('Draw','Threefold repetition');return;}
   if(state.half>=100){gameOver=true;beep('end');showResult('Draw','50-move rule');return;}
 }
-function showResult(title,sub){document.getElementById('resTitle').textContent=title;document.getElementById('resSub').textContent=sub;setTimeout(()=>{document.getElementById('resultBox').style.display='flex';},1100);}
+function showResult(title,sub){lastResult={title,sub};document.getElementById('resTitle').textContent=title;document.getElementById('resSub').textContent=sub;setTimeout(()=>{if(gameOver)document.getElementById('resultBox').style.display='flex';},1000);}
+let lastResult=null;
+function dismissResult(){document.getElementById('resultBox').style.display='none';if(lastResult){const b=document.getElementById('showResultBtn');if(b)b.style.display='block';}}
+function reopenResult(){if(!lastResult)return;document.getElementById('resultBox').style.display='flex';const b=document.getElementById('showResultBtn');if(b)b.style.display='none';}
+window.dismissResult=dismissResult;window.reopenResult=reopenResult;
 function updateStatus(msg){
   const s=document.getElementById('status');
   if(msg){s.textContent=msg;return;}
@@ -773,7 +778,7 @@ function newGame(){
   humanColor=document.getElementById('sideSel').value;
   flipped=humanColor===BLACK;
   state=initialState();initialSnapshot=state;history=[];redoStack=[];viewIndex=0;gameOver=false;selected=null;legalForSel=[];premove=null;arrows=[];rightHighlights.clear();
-  document.getElementById('resultBox').style.display='none';
+  document.getElementById('resultBox').style.display='none';lastResult=null;{const b=document.getElementById('showResultBtn');if(b)b.style.display='none';}
   document.getElementById('topPlayer').querySelector('.pname').innerHTML='Bot <span class="prating">(1000)</span>';
   document.getElementById('botPlayer').querySelector('.pname').innerHTML='You <span class="prating">(1000)</span>';
   drawBoard();render();updateStatus();
